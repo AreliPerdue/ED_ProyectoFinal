@@ -356,34 +356,41 @@ public static StatsCollector runComparisonMultiSizesLimitados(int segundos, Algo
     Random rand = new Random();
 
     for (int chosenSize : tamanos) {
-        int[] baseArray = new int[chosenSize];
-        for (int i = 0; i < chosenSize; i++) {
-            baseArray[i] = rand.nextInt(5) + 1; // 🔹 valores entre 1 y 5
-        }
-        ArrayList<Integer> baseList = DataGenerator.arrayToArrayList(baseArray);
+        // 🔁 repetir varias veces por tamaño para introducir variabilidad
+        for (int rep = 0; rep < 5; rep++) {
+            int[] baseArray = new int[chosenSize];
+            for (int i = 0; i < chosenSize; i++) {
+                baseArray[i] = rand.nextInt(5) + 1; // valores entre 1 y 5
+            }
+            ArrayList<Integer> baseList = DataGenerator.arrayToArrayList(baseArray);
 
-        CountDownLatch startLatch = new CountDownLatch(1);
-        Thread[] threads = new Thread[AlgorithmCollection.ALGO_NAMES.length * 2];
-        int idx = 0;
-        long endTimeMillis = System.currentTimeMillis() + segundos * 1000L;
+            CountDownLatch startLatch = new CountDownLatch(1);
+            Thread[] threads = new Thread[AlgorithmCollection.ALGO_NAMES.length * 2];
+            int idx = 0;
+            long endTimeMillis = System.currentTimeMillis() + segundos * 1000L;
 
-        for (String algoName : AlgorithmCollection.ALGO_NAMES) {
-            threads[idx++] = new Thread(new SortWorker(algoName, true, baseArray, baseList,
-                    endTimeMillis, startLatch, stats, algos));
-        }
-        for (String algoName : AlgorithmCollection.ALGO_NAMES) {
-            threads[idx++] = new Thread(new SortWorker(algoName, false, baseArray, baseList,
-                    endTimeMillis, startLatch, stats, algos));
-        }
+            // Crear hilos para arrays
+            for (String algoName : AlgorithmCollection.ALGO_NAMES) {
+                threads[idx++] = new Thread(new SortWorker(algoName, true, baseArray, baseList,
+                        endTimeMillis, startLatch, stats, algos));
+            }
+            // Crear hilos para listas
+            for (String algoName : AlgorithmCollection.ALGO_NAMES) {
+                threads[idx++] = new Thread(new SortWorker(algoName, false, baseArray, baseList,
+                        endTimeMillis, startLatch, stats, algos));
+            }
 
-        for (Thread t : threads) t.start();
-        Thread.sleep(50);
-        startLatch.countDown();
-        for (Thread t : threads) t.join();
+            // Lanzar hilos
+            for (Thread t : threads) t.start();
+            Thread.sleep(50);
+            startLatch.countDown();
+            for (Thread t : threads) t.join();
+        }
     }
 
     return stats;
 }
+
 
 
   /* ----------------------- Ventana Top4 ------------------------------ */
